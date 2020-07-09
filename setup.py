@@ -242,10 +242,10 @@ entry_points = {
 #=== MAIN =====================================================================
 
 def main():
-    if sys.version >= '3.0':
-        s = "Sorry, %s %s requires Python 2.x."
-        print(s % (name, version))
-        sys.exit(1)
+##    if sys.version >= '3.0':
+##        s = "Sorry, %s %s requires Python 2.x."
+##        print(s % (name, version))
+##        sys.exit(1)
 ##    if sys.version < required_python_version:
 ##        s = "I'm sorry, but %s %s requires Python %s or later."
 ##        print(s % (name, version, required_python_version))

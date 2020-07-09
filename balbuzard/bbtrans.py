@@ -55,7 +55,7 @@ __version__ = '0.20'
 
 
 
-from bbcrack import *
+from .bbcrack import *
 
 import sys, optparse
 
@@ -77,7 +77,7 @@ def main():
 
     # Print help if no argurments are passed
     if len(args) == 0 or options.transform is None:
-        print __doc__
+        print(__doc__)
         parser.print_help()
         sys.exit()
 
@@ -85,13 +85,13 @@ def main():
     if options.zip_password is not None:
         # extract 1st file from zip archive, using password
         pwd = options.zip_password
-        print 'Opening zip archive %s with password "%s"' % (fname, pwd)
+        print('Opening zip archive %s with password "%s"' % (fname, pwd))
         z = zipfile.ZipFile(fname, 'r')
-        print 'Opening first file:', z.infolist()[0].filename
+        print('Opening first file:', z.infolist()[0].filename)
         raw_data = z.read(z.infolist()[0], pwd)
     else:
         # normal file
-        print 'Opening file', fname
+        print('Opening file', fname)
         f = file(fname, 'rb')
         raw_data = f.read()
         f.close()
@@ -103,7 +103,7 @@ def main():
     params = options.params.split(',')
     #params = map(int, params) # for decimal params
     # convert hex params to int:
-    for i in xrange(len(params)):
+    for i in range(len(params)):
         params[i] = int(params[i], 16)
     if len(params)==1:
         params = params[0]
@@ -112,13 +112,13 @@ def main():
 
     for Transform_class in transform_classes_all:
         if Transform_class.gen_id == options.transform:
-            print 'Transform class:', Transform_class.gen_name
-            print 'Params:', params
+            print('Transform class:', Transform_class.gen_name)
+            print('Params:', params)
             transform = Transform_class(params)
-            print 'Transform:', transform.name
+            print('Transform:', transform.name)
             base, ext = os.path.splitext(fname)
             trans_fname = base+'_'+transform.shortname+ext
-            print 'Saving to file', trans_fname
+            print('Saving to file', trans_fname)
 ##            data = open(fname, 'rb').read()
             trans_data = transform.transform_string(raw_data)
             open(trans_fname, 'wb').write(trans_data)

@@ -117,8 +117,8 @@ import sys, os, time, optparse, zipfile
 # for sorting: see http://wiki.python.org/moin/HowTo/Sorting/
 from operator import itemgetter, attrgetter
 
-import balbuzard
-from balbuzard import Pattern, Pattern_re, bbcrack_patterns, bbcrack_patterns_stage1
+from . import balbuzard
+from .balbuzard import Pattern, Pattern_re, bbcrack_patterns, bbcrack_patterns_stage1
 
 
 #--- CLASSES ------------------------------------------------------------------
@@ -209,7 +209,7 @@ class Transform_char (Transform_string):
         """
         # for optimal speed, we build a translation table:
         self.trans_table = ''
-        for i in xrange(256):
+        for i in range(256):
             self.trans_table += self.transform_char(chr(i))
         return data.translate(self.trans_table)
 
@@ -284,7 +284,7 @@ class Transform_XOR (Transform_char):
     @staticmethod
     def iter_params ():
         # the XOR key can be 1 to 255 (0 would be identity)
-        for key in xrange(1,256):
+        for key in range(1,256):
             yield key
 
 
@@ -309,7 +309,7 @@ class Transform_XOR_INC (Transform_string):
         #TODO: use a list comprehension + join to get better performance
         # this loop is more readable, but likely to  be much slower
         out = ''
-        for i in xrange(len(data)):
+        for i in range(len(data)):
             xor_key = (self.params + i) & 0xFF
             out += chr(ord(data[i]) ^ xor_key)
         return out
@@ -317,7 +317,7 @@ class Transform_XOR_INC (Transform_string):
     @staticmethod
     def iter_params ():
         # the XOR key can be 0 to 255 (0 is not identity here)
-        for xor_key in xrange(0,256):
+        for xor_key in range(0,256):
             yield xor_key
 
 
@@ -342,7 +342,7 @@ class Transform_XOR_DEC (Transform_string):
         #TODO: use a list comprehension + join to get better performance
         # this loop is more readable, but likely to  be much slower
         out = ''
-        for i in xrange(len(data)):
+        for i in range(len(data)):
             xor_key = (self.params + 0xFF - i) & 0xFF
             out += chr(ord(data[i]) ^ xor_key)
         return out
@@ -350,7 +350,7 @@ class Transform_XOR_DEC (Transform_string):
     @staticmethod
     def iter_params ():
         # the XOR key can be 0 to 255 (0 is not identity here)
-        for xor_key in xrange(0,256):
+        for xor_key in range(0,256):
             yield xor_key
 
 
@@ -379,7 +379,7 @@ class Transform_XOR_INC_ROL (Transform_string):
         # this loop is more readable, but likely to  be much slower
         xor_key_init, rol_bits = self.params
         out = ''
-        for i in xrange(len(data)):
+        for i in range(len(data)):
             xor_key = (xor_key_init + i) & 0xFF
             out += chr(rol(ord(data[i]) ^ xor_key, rol_bits))
         return out
@@ -388,9 +388,9 @@ class Transform_XOR_INC_ROL (Transform_string):
     def iter_params ():
         "return (XOR key, ROL bits)"
         # the XOR key can be 0 to 255 (0 is not identity here)
-        for xor_key in xrange(0,256):
+        for xor_key in range(0,256):
             # the ROL bits can be 1 to 7:
-            for rol_bits in xrange(1,8):
+            for rol_bits in range(1,8):
                 yield (xor_key, rol_bits)
 
 
@@ -415,7 +415,7 @@ class Transform_SUB_INC (Transform_string):
         #TODO: use a list comprehension + join to get better performance
         # this loop is more readable, but likely to  be much slower
         out = ''
-        for i in xrange(len(data)):
+        for i in range(len(data)):
             key = (self.params + i) & 0xFF
             out += chr((ord(data[i]) - key) & 0xFF)
         return out
@@ -423,7 +423,7 @@ class Transform_SUB_INC (Transform_string):
     @staticmethod
     def iter_params ():
         # the SUB key can be 0 to 255 (0 is not identity here)
-        for key in xrange(0,256):
+        for key in range(0,256):
             yield key
 
 
@@ -464,14 +464,14 @@ class Transform_XOR_Chained (Transform_string):
         xor_key = self.params
         # 1st char is just xored with key:
         out = chr(ord(data[0]) ^ xor_key)
-        for i in xrange(1, len(data)):
+        for i in range(1, len(data)):
             out += chr(ord(data[i]) ^ xor_key ^ ord(data[i-1]))
         return out
 
     @staticmethod
     def iter_params ():
         # the XOR key can be 0 to 255 (0 is not identity here)
-        for xor_key in xrange(0,256):
+        for xor_key in range(0,256):
             yield xor_key
 
 
@@ -502,7 +502,7 @@ class Transform_XOR_RChained (Transform_string):
         out = ''
         xor_key = self.params
         # all chars except last one are xored with key and next char:
-        for i in xrange(len(data)-1):
+        for i in range(len(data)-1):
             out += chr(ord(data[i]) ^ xor_key ^ ord(data[i+1]))
         # last char is just xored with key:
         out += chr(ord(data[len(data)-1]) ^ xor_key)
@@ -511,7 +511,7 @@ class Transform_XOR_RChained (Transform_string):
     @staticmethod
     def iter_params ():
         # the XOR key can be 0 to 255 (0 is not identity here)
-        for xor_key in xrange(0,256):
+        for xor_key in range(0,256):
             yield xor_key
 
 
@@ -544,21 +544,21 @@ class Transform_XOR_RChainedAll (Transform_string):
         if len(data) == 0: return ''
         xor_key = self.params
         # transform data string to list of integers:
-        l = map(ord, data)
+        l = list(map(ord, data))
         # loop from last char to 2nd one:
-        for i in xrange(len(data)-1, 1, -1):
+        for i in range(len(data)-1, 1, -1):
             l[i-1] = l[i-1] ^ xor_key ^ l[i]
         # last char is only xored with key:
         l[len(data)-1] = l[len(data)-1] ^ xor_key
         # convert back to list of chars:
-        l = map(chr, l)
+        l = list(map(chr, l))
         out = ''.join(l)
         return out
 
     @staticmethod
     def iter_params ():
         # the XOR key can be 0 to 255 (0 is not identity here)
-        for xor_key in xrange(0,256):
+        for xor_key in range(0,256):
             yield xor_key
 
 
@@ -585,7 +585,7 @@ class Transform_ROL (Transform_char):
     def iter_params ():
         "return (ROL bits)"
         # the ROL bits can be 1 to 7:
-        for rol_bits in xrange(1,8):
+        for rol_bits in range(1,8):
             yield rol_bits
 
 
@@ -612,9 +612,9 @@ class Transform_XOR_ROL (Transform_char):
     def iter_params ():
         "return (XOR key, ROL bits)"
         # the XOR key can be 1 to 255 (0 would be like ROL)
-        for xor_key in xrange(1,256):
+        for xor_key in range(1,256):
             # the ROL bits can be 1 to 7:
-            for rol_bits in xrange(1,8):
+            for rol_bits in range(1,8):
                 yield (xor_key, rol_bits)
 
 
@@ -641,7 +641,7 @@ class Transform_ADD (Transform_char):
     def iter_params ():
         "return ADD key"
         # the ADD key can be 1 to 255 (0 would be identity):
-        for add_key in xrange(1,256):
+        for add_key in range(1,256):
             yield add_key
 
 
@@ -668,9 +668,9 @@ class Transform_ADD_ROL (Transform_char):
     def iter_params ():
         "return (ADD key, ROL bits)"
         # the ADD key can be 1 to 255 (0 would be like ROL)
-        for add_key in xrange(1,256):
+        for add_key in range(1,256):
             # the ROL bits can be 1 to 7:
-            for rol_bits in xrange(1,8):
+            for rol_bits in range(1,8):
                 yield (add_key, rol_bits)
 
 
@@ -697,9 +697,9 @@ class Transform_ROL_ADD (Transform_char):
     def iter_params ():
         "return (ROL bits, ADD key)"
         # the ROL bits can be 1 to 7:
-        for rol_bits in xrange(1,8):
+        for rol_bits in range(1,8):
             # the ADD key can be 1 to 255 (0 would be identity)
-            for add_key in xrange(1,256):
+            for add_key in range(1,256):
                 yield (rol_bits, add_key)
 
 
@@ -726,9 +726,9 @@ class Transform_XOR_ADD (Transform_char):
     def iter_params ():
         "return (XOR key1, ADD key2)"
         # the XOR key can be 1 to 255 (0 would be identity)
-        for xor_key in xrange(1,256):
+        for xor_key in range(1,256):
             # the ADD key can be 1 to 255 (0 would be identity):
-            for add_key in xrange(1,256):
+            for add_key in range(1,256):
                 yield (xor_key, add_key)
 
 
@@ -755,9 +755,9 @@ class Transform_ADD_XOR (Transform_char):
     def iter_params ():
         "return (ADD key1, XOR key2)"
         # the ADD key can be 1 to 255 (0 would be identity):
-        for add_key in xrange(1,256):
+        for add_key in range(1,256):
             # the XOR key can be 1 to 255 (0 would be identity)
-            for xor_key in xrange(1,256):
+            for xor_key in range(1,256):
                 yield (add_key, xor_key)
 
 
@@ -806,17 +806,17 @@ def list_transforms ():
     Display the list of available transforms on the console, grouped by level.
     Then exit the application.
     """
-    print 'Available transforms - Level 1:'
+    print('Available transforms - Level 1:')
     for Transform in transform_classes1:
-        print '- %s: %s' % (Transform.gen_id, Transform.gen_name)
-    print ''
-    print 'Level 2:'
+        print('- %s: %s' % (Transform.gen_id, Transform.gen_name))
+    print('')
+    print('Level 2:')
     for Transform in transform_classes2:
-        print '- %s: %s' % (Transform.gen_id, Transform.gen_name)
-    print ''
-    print 'Level 3:'
+        print('- %s: %s' % (Transform.gen_id, Transform.gen_name))
+    print('')
+    print('Level 3:')
     for Transform in transform_classes3:
-        print '- %s: %s' % (Transform.gen_id, Transform.gen_name)
+        print('- %s: %s' % (Transform.gen_id, Transform.gen_name))
     sys.exit()
 
 
@@ -869,13 +869,13 @@ def read_file(filename, zip_password=None):
     """
     if zip_password is not None:
         # extract 1st file from zip archive, using password
-        print 'Opening zip archive %s with password "%s"' % (filename, zip_password)
+        print('Opening zip archive %s with password "%s"' % (filename, zip_password))
         z = zipfile.ZipFile(filename, 'r')
-        print 'Opening first file:', z.infolist()[0].filename
+        print('Opening first file:', z.infolist()[0].filename)
         raw_data = z.read(z.infolist()[0], zip_password)
     else:
         # normal file
-        print 'Opening file', filename
+        print('Opening file', filename)
         f = file(filename, 'rb')
         raw_data = f.read()
         f.close()
@@ -900,8 +900,8 @@ def load_plugins ():
     Load plugin scripts
     """
     for f in balbuzard.rglob(balbuzard.plugins_dir, 'trans*.py'):
-        print 'Loading transform plugin from', f
-        execfile(f)
+        print('Loading transform plugin from', f)
+        exec(compile(open(f, "rb").read(), f, 'exec'))
 
 
 #=== MAIN =====================================================================
@@ -935,7 +935,7 @@ def main():
 
     # Print help if no argurments are passed
     if len(args) == 0:
-        print __doc__
+        print(__doc__)
         parser.print_help()
         sys.exit()
 
@@ -946,7 +946,7 @@ def main():
         incremental_level=options.inclevel, transform_names=options.transform)
 
     # STAGE 1: quickly count some significant characters to select best transforms
-    print 'STAGE 1: quickly counting simple patterns for all transforms'
+    print('STAGE 1: quickly counting simple patterns for all transforms')
     results1 = []
     best_score = 0
     start_time = time.clock()
@@ -967,7 +967,7 @@ def main():
 ##                    count, pattern.name, pattern.weight)
                 #/DEBUG
             msg = '\rTransform %s: stage 1 score=%d          ' % (transform.shortname, score)
-            print msg,
+            print(msg, end=' ')
 ##            print '\n'
 ##            spaces = data.count(' ')
 ##            nulls = data.count('\x00')
@@ -981,18 +981,18 @@ def main():
             results1.append((transform, score))
             if score >= best_score:
                 best_score = score
-                print '\rBest score so far: %s, stage 1 score=%d' % (transform.shortname, score)
-    print ''
+                print('\rBest score so far: %s, stage 1 score=%d' % (transform.shortname, score))
+    print('')
     t = time.clock()-start_time
-    print 'Checked %d transforms in %f seconds - %f transforms/s' % (
-        len(results1), t, len(results1)/t)
+    print('Checked %d transforms in %f seconds - %f transforms/s' % (
+        len(results1), t, len(results1)/t))
     # sort transform results by score:
     results1 = sorted(results1, key=lambda r:r[1], reverse=True)
     # keep only the N best scores:
     results1 = results1[:options.keep]
-    print '\nTOP %d SCORES stage 1:' % options.keep
+    print('\nTOP %d SCORES stage 1:' % options.keep)
     for res in results1:
-        print "%20s: %d" % (res[0].shortname, res[1])
+        print("%20s: %d" % (res[0].shortname, res[1]))
 ##    raw_input()
 
     # STAGE 2: search patterns on selected transforms
@@ -1013,20 +1013,20 @@ def main():
 ##                    print 'Found %s at index %X, length=%d * weight=%d' % (
 ##                        pattern.name, index, len(match), pattern.weight)
                 score += len(match)*pattern.weight
-            print 'Found %d * %s weight=%d' % (
-                len(matches), pattern.name, pattern.weight)
-        print 'Transform %s: score=%d\n' % (transform.shortname, score)
+            print('Found %d * %s weight=%d' % (
+                len(matches), pattern.name, pattern.weight))
+        print('Transform %s: score=%d\n' % (transform.shortname, score))
         results.append((transform, score, data))
 
-    print '\nHIGHEST SCORES (>0):'
+    print('\nHIGHEST SCORES (>0):')
     results = sorted(results, key=lambda x: x[1], reverse=True)
     # take the best N:
     for transform, score, data in results[:options.save]:
         if score > 0:
-            print '%s: score %d' % (transform.shortname, score)
+            print('%s: score %d' % (transform.shortname, score))
             base, ext = os.path.splitext(fname)
             fname_trans = base+'_'+transform.shortname+ext
-            print 'saving to file', fname_trans
+            print('saving to file', fname_trans)
             open(fname_trans, 'wb').write(data)
 
 

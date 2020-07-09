@@ -121,7 +121,7 @@ import csv
 
 # try to import magic.py - see http://www.jsnp.net/code/magic.py or PyPI/magic
 try:
-    from thirdparty.magic import magic
+    from .thirdparty.magic import magic
     MAGIC = True
 except:
     MAGIC = False
@@ -162,7 +162,7 @@ class Pattern (object):
         self.nocase = nocase
         if nocase:
             # transform pat to lowercase
-            self.pat_lower = map(string.lower, self.pat)
+            self.pat_lower = list(map(lambda x:x.lower(), self.pat))
         self.single = single
         self.weight = weight
         # for profiling:
@@ -194,7 +194,7 @@ class Pattern (object):
                     valid = self.filter(value=match, index=i, pattern=self)
                 if valid: found.append((i, match))
                 # debug message:
-                else: print 'Filtered out %s: %s' % (self.name, repr(match))
+                else: print('Filtered out %s: %s' % (self.name, repr(match)))
         return found
 
 
@@ -384,31 +384,31 @@ class Balbuzard (object):
         """
         for pattern, matches in self.scan(data):
             if hexdump:
-                print "-"*79
-                print "%s:" % pattern.name
+                print("-"*79)
+                print("%s:" % pattern.name)
             for index, match in matches:
                 # limit matched string display to 50 chars:
                 m = repr(match)
                 if len(m)> 50 and not long_strings:
                     m = m[:24]+'...'+m[-23:]
                 if hexdump:
-                    print "at %08X: %s" % (index, m)
+                    print("at %08X: %s" % (index, m))
                     # 5 lines of hexadecimal dump around the pattern: 2 lines = 32 bytes
                     start = max(index-32, 0) & 0xFFFFFFF0
                     index_end = index + len(match)
                     end = min(index_end+32+15, len(data)) & 0xFFFFFFF0
                     length = end-start
                     #print start, end, length
-                    print hexdump3(data[start:end], length=16, startindex=start)
-                    print ""
+                    print(hexdump3(data[start:end], length=16, startindex=start))
+                    print("")
                 else:
-                    print "at %08X: %s - %s" % (index, pattern.name, m)
+                    print("at %08X: %s - %s" % (index, pattern.name, m))
                 if csv_writer is not None:
                     #['Filename', 'Index', 'Pattern name', 'Found string', 'Length']
                     csv_writer.writerow([filename, '0x%08X' % index, pattern.name,
                         m, len(match)])
         # blank line between each file:
-        print ''
+        print('')
 
     ##            if item == "EXE MZ headers" and MAGIC:
     ##                # Check if it's really a EXE header
@@ -458,7 +458,7 @@ def hexdump3(src, length=8, startindex=0):
     startindex: index of 1st byte.
     """
     result=[]
-    for i in xrange(0, len(src), length):
+    for i in range(0, len(src), length):
        s = src[i:i+length]
        hexa = ' '.join(["%02X"%ord(x) for x in s])
        printable = s.translate(FILTER)
@@ -512,7 +512,7 @@ def ziglob (zipfileobj, pathname):
     filenames, using wildcards, e.g. *.txt
     """
     files = zipfileobj.namelist()
-    for f in files: print f
+    for f in files: print(f)
     for f in fnmatch.filter(files, pathname):
         yield f
 
@@ -536,16 +536,16 @@ def iter_files(files, recursive=False, zip_password=None, zip_fname='*'):
         for filename in iglob(filespec):
             if zip_password is not None:
                 # Each file is a zip archive:
-                print 'Opening zip archive %s with provided password' % filename
+                print('Opening zip archive %s with provided password' % filename)
                 z = zipfile.ZipFile(filename, 'r')
-                print 'Looking for file(s) matching "%s"' % zip_fname
+                print('Looking for file(s) matching "%s"' % zip_fname)
                 for filename in ziglob(z, zip_fname):
-                    print 'Opening file in zip archive:', filename
+                    print('Opening file in zip archive:', filename)
                     data = z.read(filename, zip_password)
                     yield filename, data
             else:
                 # normal file
-                print 'Opening file', filename
+                print('Opening file', filename)
                 data = open(filename, 'rb').read()
                 yield filename, data
 
@@ -576,7 +576,7 @@ patfile = os.path.join(main_dir, 'patterns.py')
 # save __doc__, else it seems to be overwritten:
 d = __doc__
 #print 'patfile:', patfile
-execfile(patfile)
+exec(compile(open(patfile, "rb").read(), patfile, 'exec'))
 __doc__ = d
 del d
 
@@ -605,27 +605,27 @@ def main():
 
     # Print help if no argurments are passed
     if len(args) == 0:
-        print __doc__
+        print(__doc__)
         parser.print_help()
         sys.exit()
 
     # load plugins
     for f in rglob(plugins_dir, 'bbz*.py'): # glob.iglob('plugins/bbz*.py'):
-        print 'Loading plugin from', relpath(f, plugins_dir)
-        execfile(f)
+        print('Loading plugin from', relpath(f, plugins_dir))
+        exec(compile(open(f, "rb").read(), f, 'exec'))
 
     # load yara plugins
     if YARA:
         yara_rules = []
         for f in rglob(plugins_dir, '*.yara'):  #glob.iglob('plugins/*.yara'):  # or bbz*.yara?
-            print 'Loading yara plugin from', relpath(f, plugins_dir)
+            print('Loading yara plugin from', relpath(f, plugins_dir))
             yara_rules.append(yara.compile(f))
     else:
         yara_rules = None
 
     # open CSV file
     if options.csv:
-        print 'Writing output to CSV file: %s' % options.csv
+        print('Writing output to CSV file: %s' % options.csv)
         csvfile = open(options.csv, 'wb')
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(['Filename', 'Index', 'Pattern name',
@@ -637,10 +637,10 @@ def main():
     # scan each file provided as argument:
     for filename, data in iter_files(args, options.recursive,
         options.zip_password, options.zip_fname):
-        print "="*79
-        print "File: %s\n" % filename
+        print("="*79)
+        print("File: %s\n" % filename)
         if MAGIC:
-            print "Filetype according to magic: %s\n" % magic.whatis(data)
+            print("Filetype according to magic: %s\n" % magic.whatis(data))
         bbz = Balbuzard(patterns, yara_rules=yara_rules)
         bbz.scan_display(data, filename, hexdump=options.verbose, csv_writer=csv_writer, long_strings=options.long_strings)
 

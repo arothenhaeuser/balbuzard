@@ -70,12 +70,12 @@ __version__ = '0.20'
 
 import sys, os, time, optparse, zipfile, csv
 
-from bbcrack import *
+from .bbcrack import *
 
 
 #--- PATTERNS -----------------------------------------------------------------
 
-from balbuzard import harvest_patterns
+from .balbuzard import harvest_patterns
 
 
 #--- FUNCTIONS ----------------------------------------------------------------
@@ -86,7 +86,7 @@ def harvest (raw_data, transform_classes, filename, profiling=False,
     apply all transforms to raw_data, and extract all patterns of interest
     (Slow, but useful when a file uses multiple transforms.)
     """
-    print '*** WARNING: harvest mode may return a lot of false positives!'
+    print('*** WARNING: harvest mode may return a lot of false positives!')
     # here we only want to extract patterns of interest
     bbz = balbuzard.Balbuzard(harvest_patterns)
     if not profiling:
@@ -96,7 +96,7 @@ def harvest (raw_data, transform_classes, filename, profiling=False,
                 # instantiate a Transform object with these params
                 transform = Transform_class(params)
                 msg = 'transform %s          \r' % transform.shortname
-                print msg,
+                print(msg, end=' ')
                 # transform data:
                 data = transform.transform_string(raw_data)
                 # search each pattern in transformed data:
@@ -107,14 +107,14 @@ def harvest (raw_data, transform_classes, filename, profiling=False,
                             m = repr(match)
                             if len(m)> 50:
                                 m = m[:24]+'...'+m[-23:]
-                            print '%s: at %08X %s, string=%s' % (
-                                transform.shortname, index, pattern.name, m)
+                            print('%s: at %08X %s, string=%s' % (
+                                transform.shortname, index, pattern.name, m))
                             if csv_writer is not None:
                                 #['Filename', 'Transform', 'Index', 'Pattern name', 'Found string', 'Length']
                                 csv_writer.writerow([filename,
                                     transform.shortname, '0x%08X' % index,
                                     pattern.name, m, len(match)])
-        print '                                      '
+        print('                                      ')
     else:
         # same code, with profiling:
         count_trans = 0
@@ -127,7 +127,7 @@ def harvest (raw_data, transform_classes, filename, profiling=False,
                 # instantiate a Transform object with these params
                 transform = Transform_class(params)
                 msg = 'transform %s          \r' % transform.shortname
-                print msg,
+                print(msg, end=' ')
                 # transform data:
                 start_trans = time.clock()
                 data = transform.transform_string(raw_data)
@@ -137,18 +137,18 @@ def harvest (raw_data, transform_classes, filename, profiling=False,
                     count_patterns += 1
                     for index, match in matches:
                         if len(match)>3:
-                            print '%s: %s at index %X, string=%s' % (
-                                transform.shortname, pattern.name, index, repr(match))
+                            print('%s: %s at index %X, string=%s' % (
+                                transform.shortname, pattern.name, index, repr(match)))
                 if count_trans % 10 == 0:
                     t = time.clock()-start_time
-                    print 'PROFILING: %d transforms in %.1fs, %.2f ms/trans' % (
-                        count_trans, t, t*1000/count_trans)
+                    print('PROFILING: %d transforms in %.1fs, %.2f ms/trans' % (
+                        count_trans, t, t*1000/count_trans))
                     for pattern in sorted(bbz.patterns, key=attrgetter('total_time'),
                         reverse=True):
-                        print '- %s: %.1f%%, total time = %.1fs' % (
+                        print('- %s: %.1f%%, total time = %.1fs' % (
                             pattern.name, 100*pattern.total_time/t,
-                            pattern.total_time)
-        print '                                      '
+                            pattern.total_time))
+        print('                                      ')
 
 
 #=== MAIN =====================================================================
@@ -182,7 +182,7 @@ def main():
 
     # Print help if no argurments are passed
     if len(args) == 0:
-        print __doc__
+        print(__doc__)
         parser.print_help()
         sys.exit()
 
@@ -195,7 +195,7 @@ def main():
 
     # open CSV file
     if options.csv:
-        print 'Writing output to CSV file: %s' % options.csv
+        print('Writing output to CSV file: %s' % options.csv)
         csvfile = open(options.csv, 'wb')
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(['Filename', 'Transform', 'Index', 'Pattern name',
