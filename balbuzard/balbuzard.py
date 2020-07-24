@@ -160,7 +160,7 @@ class Pattern (object):
             # else we assume it's a sequence:
             self.pat = pat
         self.nocase = nocase
-        if nocase:
+        if nocase and type(self) is Pattern:
             # transform pat to lowercase
             self.pat_lower = list(map(lambda x:x.lower(), self.pat))
         self.single = single
@@ -188,7 +188,7 @@ class Pattern (object):
             l = len(s)
             for i in str_find_all(d, s):
                 # the matched string is not always s, case can differ:
-                match = data[i:i+len(s)]
+                match = data[i:i+l]
                 valid = True
                 if self.filter is not None:
                     valid = self.filter(value=match, index=i, pattern=self)
@@ -466,10 +466,10 @@ def hexdump3(src, length=8, startindex=0):
     return ''.join(result)
 
 
-def str_find_all(a_str, sub):
+def str_find_all (a_str, sub):
     start = 0
     while True:
-        start = a_str.find(sub, start)
+        start = a_str.find(bytes(sub, 'ascii'), start)
         if start == -1: return
         yield start
         start += len(sub)
@@ -517,7 +517,7 @@ def ziglob (zipfileobj, pathname):
         yield f
 
 
-def iter_files(files, recursive=False, zip_password=None, zip_fname='*'):
+def iter_files (files, recursive=False, zip_password=None, zip_fname='*'):
     """
     Open each file provided as argument:
     - files is a list of arguments

@@ -237,14 +237,14 @@ def str_filter (value, index=0, pattern=None):
 ##    Pattern_re("IP addresses", r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", weight=10),
 # Here I use \b to make sure there is no other digit around and to speedup search
 pat_ipv4 = Pattern_re("IPv4 address",
-    r"\b(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b",
+    b"\b(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\b",
     weight=100, filt=ipv4_filter)
 
 #------------------------------------------------------------------------------
 # URLs
-pat_url = Pattern_re('URL (http/https/ftp)', r'(http|https|ftp)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*[^\.\,\)\(\s]', weight=10000)
+pat_url = Pattern_re('URL (http/https/ftp)', b'(http|https|ftp)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*[^\.\,\)\(\s]', weight=10000)
 # simpler version for bbcrack:
-pat_url2 = Pattern_re('URL (http/https/ftp)', r'(http|https|ftp)\://[a-zA-Z0-9\-\.&%\$#\=~]+', weight=10000)
+pat_url2 = Pattern_re('URL (http/https/ftp)', b'(http|https|ftp)\://[a-zA-Z0-9\-\.&%\$#\=~]+', weight=10000)
 #NOTE: here the score can be high because false positives are less likely, since
 #      it starts with a fixed string.
 
@@ -254,21 +254,21 @@ pat_email = Pattern_re('e-mail address',
     ##r'(?i)\b[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|int|biz|info|mobi|name|aero|asia|jobs|museum)\b',
     # changed to catch all current TLDs registered at IANA (in combination with filter function):
     # TLD = either only chars from 2 to 12, or 'XN--' followed by up to 18 chars and digits
-    r'(?i)\b[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+(?:[A-Z]{2,12}|XN--[A-Z0-9]{4,18})\b',
+    b'(?i)\b[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+(?:[A-Z]{2,12}|XN--[A-Z0-9]{4,18})\b',
     weight=10, filt=email_filter)
     # adapted from http://www.regular-expressions.info/email.html
 ##    Pattern_re('e-mail address', r'([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,6})', weight=10), # source: http://regexlib.com/REDetails.aspx?regexp_id=2119
 
 #------------------------------------------------------------------------------
 # DOMAIN NAMES
-pat_domain = Pattern_re('domain name', r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)', weight=10) # source: http://regexlib.com/REDetails.aspx?regexp_id=1319
+pat_domain = Pattern_re('domain name', b'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)', weight=10) # source: http://regexlib.com/REDetails.aspx?regexp_id=1319
 #TODO: make it similar to e-mail address, with filter?
 
 #------------------------------------------------------------------------------
 # EXECUTABLE FILES
 pat_mz = Pattern("EXE MZ headers", "MZ|ZM".split('|'))
 pat_pe = Pattern("EXE PE headers", "PE")
-pat_mzpe = Pattern_re("EXE MZ followed by PE", r"(?s)MZ.{32,1024}PE\000\000", weight=100) # (?s) sets the DOTALL flag, so that dot matches any character
+pat_mzpe = Pattern_re("EXE MZ followed by PE", b"(?s)MZ.{32,1024}PE\000\000", weight=100) # (?s) sets the DOTALL flag, so that dot matches any character
 pat_exemsg = Pattern("EXE PE DOS message", "This program cannot be run in DOS mode", nocase=True, weight=10000)
 pat_section = Pattern("EXE: section name", ".text|.data|.rdata|.rsrc|.reloc".split('|'), nocase=True, weight=100) #nocase?
 
@@ -279,7 +279,7 @@ pat_petite = Pattern("EXE: packed with Petite", ".petite", nocase=True, weight=1
 
 #------------------------------------------------------------------------------
 # INDICATORS
-pat_exe_fname = Pattern_re("Executable filename", r"\b\w+\.(EXE|COM|VBS|JS|VBE|JSE|BAT|CMD|DLL|SCR|CLASS|JAR)\b", nocase=True, weight=10)
+pat_exe_fname = Pattern_re("Executable filename", rb"\w+\.(EXE|COM|VBS|JS|VBE|JSE|BAT|CMD|DLL|SCR|CLASS|JAR)", nocase=True, weight=10)
 pat_win32 = Pattern("EXE: interesting Win32 function names", "WriteFile|IsDebuggerPresent|RegSetValue|CreateRemoteThread".split('|'), weight=10000)  #nocase?
 pat_winsock = Pattern("EXE: interesting WinSock function names", "WS2_32.dll|WSASocket|WSASend|WSARecv".split('|'), nocase=True, weight=10000) #nocase?
 pat_msvcpp = Pattern("EXE: possibly compiled with Microsoft Visual C++", "Microsoft Visual C++", weight=10000)
@@ -291,7 +291,7 @@ pat_keywords = Pattern("Interesting keywords", "password|login|pwd|administrator
 
 #------------------------------------------------------------------------------
 # FILE PARTS
-pat_ole2 = Pattern("Possible OLE2 header (e.g. MS Office documents)", "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", weight=10)
+pat_ole2 = Pattern_re("Possible OLE2 header (e.g. MS Office documents)", b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", weight=10)
     #ref: http://msdn.microsoft.com/en-us/library/dd941946.aspx
 pat_vba = Pattern("Possible VBA macros", "VBA") #nocase?
 
@@ -307,8 +307,8 @@ pat_rtf_object = Pattern('RTF embedded object', '{\\object', weight=10)
 
 #------------------------------------------------------------------------------
 # ENCODED DATA
-pat_hex = Pattern_re('Hex blob', r'([A-F0-9][A-F0-9]|[a-f0-9][a-f0-9]){16,}', weight=1)
-pat_b64 = Pattern_re('Base64 blob', r'(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)', weight=1)
+pat_hex = Pattern_re('Hex blob', b'([A-F0-9][A-F0-9]|[a-f0-9][a-f0-9]){16,}', weight=1)
+pat_b64 = Pattern_re('Base64 blob', b'(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=|[A-Za-z0-9+/][AQgw]==)', weight=1)
 
 
 #------------------------------------------------------------------------------
@@ -322,12 +322,12 @@ pat_b64 = Pattern_re('Base64 blob', r'(?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2
 # So either all uppercase [A-Z]
 # Or one any case [A-Za-z] followed by lowercase only [a-z]
 # This is to avoid false positives.
-pat_word6 = Pattern_re('Any word longer than 6 chars', r'\b(?:[A-Z]{6,}|[A-Za-z][a-z]{5,})\b')
+pat_word6 = Pattern_re('Any word longer than 6 chars', b'\b(?:[A-Z]{6,}|[A-Za-z][a-z]{5,})\b')
 # old simpler version:
 #pat_word6 = Pattern_re('Any word longer than 6 chars', r'\b[A-Za-z]{6,}\b')
 
-pat_sentence = Pattern_re('Sentence of 3 words or more', r'([A-Za-z]{2,}\s){2,}[A-Za-z]{2,}', weight=1) #TODO: this one seems incomplete
-pat_camelcase_word = Pattern_re('CamelCase word', r'\b([A-Z][a-z0-9]{2,}){2,}\b', weight=1)
+pat_sentence = Pattern_re('Sentence of 3 words or more', b'([A-Za-z]{2,}\s){2,}[A-Za-z]{2,}', weight=1) #TODO: this one seems incomplete
+pat_camelcase_word = Pattern_re('CamelCase word', b'\b([A-Z][a-z0-9]{2,}){2,}\b', weight=1)
 
 
 #=== PATTERN GROUPS ===========================================================
